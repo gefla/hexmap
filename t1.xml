@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+	  "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>XTech SVG Demo</title>
+    <link href="mystyle.css" rel="stylesheet" type="text/css"/>
+    <script src="map.js" type="text/javascript"/>
+  </head>
+  <body id="body"
+	style="position:absolute; z-index:0; border:1px solid black; left:5%; top:5%; width:90%; height:90%;"
+	onload="t1()">
+    <div>
+      <button onclick="setCell(0,0,'c')">setCell(0,0,'c')</button>
+      <input type="range" min="0" max="50" value="10" onchange="zoom(event)" />
+    </div>
+    <svg xmlns="http://www.w3.org/2000/svg" version="1.1"
+	 xmlns:xlink="http://www.w3.org/1999/xlink">
+      <defs>
+	<path d="M 0,10 L 0,30 L 20,40 L 40,30 L 40,10 L 20,0 L 0,10 z " id="hex"/>
+	<radialGradient id="hex-gradient" cx="20" cy="20" fx="20" fy="20" r="22" gradientUnits="objectBoundingBox">
+	  <stop style="stop-color:#e2e2e2;stop-opacity:1;" offset="0"/>
+	  <stop style="stop-color:#000000;stop-opacity:1;" offset="1"/>
+	</radialGradient>
+	<g class="hex" id="cell">
+	  <use x="0" y="0" xlink:href="#hex"/>
+	  <text x="20" y="25">-4,-4</text>
+	</g>
+      </defs>
+      <g transform="scale(2)" id="mapArea">
+      </g>
+    </svg>
+    <hr/>
+    <address></address>
+    <!-- hhmts start --> Last modified: Sat Jan  6 19:00:10 CET 2007 <!-- hhmts end -->
+  </body>
+</html>
