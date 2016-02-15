@@ -40,3 +40,8 @@ text {
     stroke: green;
     fill: blue
 }
+
+#mapContainer {
+    height: 400px;
+    width: 100%;
+}
