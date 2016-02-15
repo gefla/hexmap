@@ -1,4 +1,6 @@
 Hexmap = (function() {
+    var mapSizeX = 64;
+    var mapSizeY = 64;
     var hm = {
 	scale: 2,
 	transX: -100,
@@ -28,11 +30,13 @@ Hexmap = (function() {
     {
 	var drawX = x * 20;
 	var drawY = y * 30;
+	var empX = x % mapSizeX;
+	var empY = y % mapSizeY;
 
 	var group = document.createElementNS("http://www.w3.org/2000/svg", "g");
 	group.setAttribute("class", "hex");
 	group.onclick = onclick;
-	group.empCoords = {x: x, y: y};
+	group.empCoords = {x: empX, y: empY};
 
 	var use = document.createElementNS("http://www.w3.org/2000/svg", "use");
 	use.setAttribute("x", drawX);
@@ -61,16 +65,34 @@ Hexmap = (function() {
     hm.t1 = function()
     {
 	this.mapArea = document.getElementById("mapArea");
-	for (y = 0; y < 128; y++) {
-	    for (x = ((y % 2) == 1 ? 1 : 0); x < 128; x += 2) {
+	for (y = 0; y < mapSizeY * 2; y++) {
+	    for (x = ((y % 2) == 1 ? 1 : 0); x < mapSizeX * 2; x += 2) {
 		this.createCell(x, y);
-		this.setCell(x, y, makeCellId(x, y));
+		this.setCell(x, y, makeCellId(x % mapSizeX, y % mapSizeY));
 	    }
 	}
 	this.updateTransform();
     }
 
     hm.updateTransform = function() {
+	dx = 20 * this.scale;
+	dy = 30 * this.scale;
+	mapJumpX = dx * mapSizeX;
+	mapJumpY = dy * mapSizeY;
+	if (this.transX > -dx) {
+	    this.transX -= mapJumpX;
+	} else {
+	    if (this.transX < -dx * (mapSizeX+1)) {
+		this.transX += mapJumpX;
+	    }
+	}
+	if (this.transY > -dy) {
+	    this.transY -= mapJumpY;
+	} else {
+	    if (this.transY < -dy * (mapSizeY+1)) {
+		this.transY += mapJumpY;
+	    }
+	}
 	this.mapArea.setAttribute("transform", "translate(" +
 				  this.transX + " " + this.transY +
 				  ") scale(" + this.scale + ")");
