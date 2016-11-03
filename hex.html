@@ -1,15 +1,18 @@
 <!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
 <html> <head>
 <title>Hex grid test</title>
+<script data-main="js/app" src="bower_components/requirejs/require.js"></script>
 </head>
 
 <body>
 <h1>Hexmap test</h1>
 
-<canvas id="layout-test-orientation-pointy" width="400" height="400"></canvas>
+<canvas id="layout-test-orientation-pointy" width="400" height="400"
+onmousemove="Hexmap.onMove(this, event)"></canvas>
+<div id="msg"></div>
 
 <hr>
 <address></address>
-<!-- hhmts start -->Last modified: Mon Oct 17 19:59:59 CEST 2016 <!-- hhmts end -->
+<!-- hhmts start -->Last modified: Thu Nov  3 20:28:26 CET 2016 <!-- hhmts end -->
 <script src="hex.js"></script>
 </body> </html>

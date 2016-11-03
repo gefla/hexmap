@@ -1,4 +1,4 @@
-(function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
+Hexmap = (function e(t,n,r){function s(o,u){if(!n[o]){if(!t[o]){var a=typeof require=="function"&&require;if(!u&&a)return a(o,!0);if(i)return i(o,!0);var f=new Error("Cannot find module '"+o+"'");throw f.code="MODULE_NOT_FOUND",f}var l=n[o]={exports:{}};t[o][0].call(l.exports,function(e){var n=t[o][1][e];return s(n?n:e)},l,l.exports,e,t,n,r)}return n[o].exports}var i=typeof require=="function"&&require;for(var o=0;o<r.length;o++)s(r[o]);return s})({1:[function(require,module,exports){
 // Generated code -- http://www.redblobgames.com/grids/hexagons/
 "use strict";
 
@@ -419,7 +419,7 @@ function drawHexLabel(ctx, map, layout, hex) {
     ctx.textBaseline = "middle";
     //ctx.fillText((hex.q == 0 && hex.r == 0 && hex.s == 0)? "q,r,s" : (hex.q + "," + hex.r + "," + hex.s), center.x, center.y - 6);
     var coords = cubeToOddQ(hex.q, hex.r, hex.s);
-    ctx.fillText(map.toIndex(coords), center.x, center.y - 6);
+    //ctx.fillText(map.toIndex(coords), center.x, center.y - 6);
     ctx.fillText(coords.x + "," + coords.y, center.x, center.y + 6);
 }
 
@@ -480,4 +480,14 @@ function drawGrid(id, backgroundColor, withLabels, layout, map) {
 drawGrid("layout-test-orientation-pointy", "hsl(60, 10%, 90%)", true,
          H.Layout(H.layout_pointy, H.Point(25, 25), H.Point(0, 0)));
 
+
+function onMove(el, event) {
+    var Pos = H.pixel_to_hex(event.x, event.y) + " (" + event.x + "/" + event.y + ")";
+    var msg = document.getElementById("msg");
+    msg.textContent = Pos;
+    return true;
+}
+    
+exports.onMove = onMove
+    
 },{"./codegen/output/lib.js":1}]},{},[2]);
