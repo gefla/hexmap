@@ -1,15 +1,6 @@
 define(['hex'], function(H) {
-    function drawHex(ctx, layout, hex) {
-        var corners = H.polygon_corners(layout, hex);
-        ctx.beginPath();
-        ctx.strokeStyle = "black";
-        ctx.lineWidth = 1;
-        ctx.moveTo(corners[5].x, corners[5].y);
-        for (var i = 0; i < 6; i++) {
-            ctx.lineTo(corners[i].x, corners[i].y);
-        }
-        ctx.stroke();
-    }
+    var layout = H.Layout(H.layout_pointy, H.Point(25, 25), H.Point(0, 0));
+
     function colorForHex(hex) {
         // Match the color style used in the main article
         if (hex.q == 0 && hex.r == 0 && hex.s == 0) {
@@ -33,7 +24,40 @@ define(['hex'], function(H) {
             y: row
         };
     }
-    function drawHexLabel(ctx, map, layout, hex) {
+
+    function Map(topLeft, size) {
+	// map -> this
+        this.topLeft = topLeft;
+        this.size = size;
+	return this;
+    }
+    Map.prototype.hexes = function() {
+        var hexes = [];
+        var i1 = this.topLeft.x, i2 = i1 + this.size.x;
+        var j1 = this.topLeft.y, j2 = j1 + this.size.y;
+        for (var j = j1; j < j2; j++) {
+            var jOffset = -Math.floor(j / 2);
+            for (var i = i1 + jOffset; i < i2 + jOffset; i++) {
+                hexes.push(H.Hex(i, j, -i - j));
+            }
+        }
+        return hexes;
+    }
+    Map.prototype.toIndex = function(c) {
+        return ( Math.floor(c.x / 2) - this.topLeft.x + (c.y - this.topLeft.y) * this.size.x) ;
+    }
+    Map.prototype.drawHex = function(ctx, hex) {
+        var corners = H.polygon_corners(layout, hex);
+        ctx.beginPath();
+        ctx.strokeStyle = "black";
+        ctx.lineWidth = 1;
+        ctx.moveTo(corners[5].x, corners[5].y);
+        for (var i = 0; i < 6; i++) {
+            ctx.lineTo(corners[i].x, corners[i].y);
+        }
+        ctx.stroke();
+    }
+    Map.prototype.drawHexLabel = function(ctx, hex) {
         var center = H.hex_to_pixel(layout, hex);
         ctx.fillStyle = colorForHex(hex);
         ctx.font = "12px sans-serif";
@@ -41,34 +65,10 @@ define(['hex'], function(H) {
         ctx.textBaseline = "middle";
         //ctx.fillText((hex.q == 0 && hex.r == 0 && hex.s == 0)? "q,r,s" : (hex.q + "," + hex.r + "," + hex.s), center.x, center.y - 6);
         var coords = cubeToOddQ(hex.q, hex.r, hex.s);
-        //ctx.fillText(map.toIndex(coords), center.x, center.y - 6);
+        //ctx.fillText(this.toIndex(coords), center.x, center.y - 6);
         ctx.fillText(coords.x + "," + coords.y, center.x, center.y + 6);
     }
-    var Map = function(topLeft, size) {
-        var map = {
-            topLeft: topLeft,
-            size: size,
-        };
-        map.hexes = function() {
-            var hexes = [];
-            var i1 = map.topLeft.x
-              , i2 = i1 + size.x;
-            var j1 = map.topLeft.y
-              , j2 = j1 + size.y;
-            for (var j = j1; j < j2; j++) {
-                var jOffset = -Math.floor(j / 2);
-                for (var i = i1 + jOffset; i < i2 + jOffset; i++) {
-                    hexes.push(H.Hex(i, j, -i - j));
-                }
-            }
-            return hexes;
-        }
-        map.toIndex = function(c) {
-            return ( Math.floor(c.x / 2) - map.topLeft.x + (c.y - map.topLeft.y) * map.size.x) ;
-        }
-        return map;
-    }
-    function drawGrid(id, backgroundColor, withLabels, layout, map) {
+    Map.prototype.drawGrid = function(id, backgroundColor, withLabels) {
         var canvas = document.getElementById(id);
         var ctx = canvas.getContext('2d');
         var width = canvas.clientWidth;
@@ -80,29 +80,20 @@ define(['hex'], function(H) {
             canvas.height = height * window.devicePixelRatio;
             ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
         }
-        if (map === undefined) {
-            map = Map({
-                x: -3,
-                y: -3
-            }, {
-                x: 6,
-                y: 6
-            });
-        }
         ctx.fillStyle = backgroundColor;
         ctx.fillRect(0, 0, width, height);
         ctx.translate(width / 2, height / 2);
-        map.hexes().forEach(function(hex) {
-            drawHex(ctx, layout, hex);
+	var map = this;
+        this.hexes().forEach(function(hex) {
+            map.drawHex(ctx, hex);
             if (withLabels)
-                drawHexLabel(ctx, map, layout, hex);
+                map.drawHexLabel(ctx, hex);
         });
     }
-    var layout = H.Layout(H.layout_pointy, H.Point(25, 25), H.Point(0, 0));
-    function drawExample() {
-        drawGrid("layout-test-orientation-pointy", "hsl(60, 10%, 90%)", true, layout);
+    Map.prototype.drawExample = function() {
+        this.drawGrid("layout-test-orientation-pointy", "hsl(60, 10%, 90%)", true);
     }
-    function onMove(el, event) {
+    Map.prototype.onMove = function(el, event) {
         var hex = H.pixel_to_hex(layout, {
             x: event.offsetX,
             y: event.offsetY
@@ -112,8 +103,5 @@ define(['hex'], function(H) {
         msg.textContent = Pos;
         return true;
     }
-    return {
-        onMove: onMove,
-        drawExample: drawExample
-    }
+    return Map;
 })
