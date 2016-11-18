@@ -25,8 +25,9 @@ define(['hex'], function(H) {
         };
     }
 
-    function Map(topLeft, size) {
+    function Map(canvas, topLeft, size) {
 	// map -> this
+	this.canvas = canvas;
         this.topLeft = topLeft;
         this.size = size;
 	return this;
@@ -68,8 +69,8 @@ define(['hex'], function(H) {
         //ctx.fillText(this.toIndex(coords), center.x, center.y - 6);
         ctx.fillText(coords.x + "," + coords.y, center.x, center.y + 6);
     }
-    Map.prototype.drawGrid = function(id, backgroundColor, withLabels) {
-        var canvas = document.getElementById(id);
+    Map.prototype.drawGrid = function(backgroundColor, withLabels) {
+	var canvas = this.canvas;
         var ctx = canvas.getContext('2d');
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
@@ -91,14 +92,19 @@ define(['hex'], function(H) {
         });
     }
     Map.prototype.drawExample = function() {
-        this.drawGrid("layout-test-orientation-pointy", "hsl(60, 10%, 90%)", true);
+        this.drawGrid("hsl(60, 10%, 90%)", true);
     }
     Map.prototype.onMove = function(el, event) {
-        var hex = H.pixel_to_hex(layout, {
-            x: event.offsetX,
-            y: event.offsetY
-        });
-        var Pos = hex.q + "," + hex.r + " " + hex.s + " (" + event.offsetX + "/" + event.offsetY + ")";
+        var mapOffsetX = this.canvas.clientWidth / 2;
+        var mapOffsetY = this.canvas.clientHeight / 2;
+
+        var hex = H.hex_round(H.pixel_to_hex(layout, {
+            x: event.offsetX - mapOffsetX,
+            y: event.offsetY - mapOffsetY
+        }));
+	// Empire coords
+	var e = cubeToOddQ(hex.q, hex.r, hex.s);
+        var Pos = e.x + "," + e.y + " || " + hex.q + "," + hex.r + "," + hex.s + " (" + event.offsetX + "/" + event.offsetY + ")";
         var msg = document.getElementById("msg");
         msg.textContent = Pos;
         return true;
