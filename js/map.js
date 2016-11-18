@@ -24,12 +24,13 @@ define(['hex'], function(H) {
     }
 
     function Map(canvas, topLeft, size) {
-	// map -> this
+	// Canvas to draw on
 	this.canvas = canvas;
         this.topLeft = topLeft;
         this.size = size;
 	this.origin = H.Point(0, 0);
 	this.scale = H.Point(25, 25);
+	this.mouseHex = H.Hex(0, 0, 0);
 	return this;
     }
     Map.prototype.layout = function() {
@@ -54,7 +55,11 @@ define(['hex'], function(H) {
         var corners = H.polygon_corners(this.layout(), hex);
         ctx.beginPath();
         ctx.strokeStyle = "black";
-        ctx.lineWidth = 1;
+	if (H.hex_equal(hex, this.mouseHex)) {
+	    ctx.lineWidth = 2;
+	} else {
+            ctx.lineWidth = 1;
+	}
         ctx.moveTo(corners[5].x, corners[5].y);
         for (var i = 0; i < 6; i++) {
             ctx.lineTo(corners[i].x, corners[i].y);
@@ -110,6 +115,9 @@ define(['hex'], function(H) {
         var Pos = e.x + "," + e.y + " || " + hex.q + "," + hex.r + "," + hex.s + " (" + event.offsetX + "/" + event.offsetY + ")";
         var msg = document.getElementById("msg");
         msg.textContent = Pos;
+
+	this.mouseHex = hex;
+	this.redraw();
         return true;
     }
     return Map;
