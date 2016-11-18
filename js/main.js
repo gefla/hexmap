@@ -12,5 +12,5 @@ define(["jquery", "map"], function($, Map) {
 
     document.Hexmap = map;
 
-    map.drawExample();
+    map.redraw();
 });

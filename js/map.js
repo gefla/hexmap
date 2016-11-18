@@ -1,6 +1,4 @@
 define(['hex'], function(H) {
-    var layout = H.Layout(H.layout_pointy, H.Point(25, 25), H.Point(0, 0));
-
     function colorForHex(hex) {
         // Match the color style used in the main article
         if (hex.q == 0 && hex.r == 0 && hex.s == 0) {
@@ -30,7 +28,12 @@ define(['hex'], function(H) {
 	this.canvas = canvas;
         this.topLeft = topLeft;
         this.size = size;
+	this.origin = H.Point(0, 0);
+	this.scale = H.Point(25, 25);
 	return this;
+    }
+    Map.prototype.layout = function() {
+	return H.Layout(H.layout_pointy, this.scale, this.origin);
     }
     Map.prototype.hexes = function() {
         var hexes = [];
@@ -48,7 +51,7 @@ define(['hex'], function(H) {
         return ( Math.floor(c.x / 2) - this.topLeft.x + (c.y - this.topLeft.y) * this.size.x) ;
     }
     Map.prototype.drawHex = function(ctx, hex) {
-        var corners = H.polygon_corners(layout, hex);
+        var corners = H.polygon_corners(this.layout(), hex);
         ctx.beginPath();
         ctx.strokeStyle = "black";
         ctx.lineWidth = 1;
@@ -59,7 +62,7 @@ define(['hex'], function(H) {
         ctx.stroke();
     }
     Map.prototype.drawHexLabel = function(ctx, hex) {
-        var center = H.hex_to_pixel(layout, hex);
+        var center = H.hex_to_pixel(this.layout(), hex);
         ctx.fillStyle = colorForHex(hex);
         ctx.font = "12px sans-serif";
         ctx.textAlign = "center";
@@ -91,14 +94,14 @@ define(['hex'], function(H) {
                 map.drawHexLabel(ctx, hex);
         });
     }
-    Map.prototype.drawExample = function() {
+    Map.prototype.redraw = function() {
         this.drawGrid("hsl(60, 10%, 90%)", true);
     }
     Map.prototype.onMove = function(el, event) {
         var mapOffsetX = this.canvas.clientWidth / 2;
         var mapOffsetY = this.canvas.clientHeight / 2;
 
-        var hex = H.hex_round(H.pixel_to_hex(layout, {
+        var hex = H.hex_round(H.pixel_to_hex(this.layout(), {
             x: event.offsetX - mapOffsetX,
             y: event.offsetY - mapOffsetY
         }));
