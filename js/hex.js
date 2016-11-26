@@ -6,6 +6,10 @@ define(function() {
             y: y
         };
     }
+    function point_add(a, b)
+    {
+	return Point(a.x + b.x, a.y + b.y);
+    }
     function point_scale(p, s)
     {
 	return Point(p.x * s, p.y * s);
@@ -258,6 +262,7 @@ define(function() {
     // Exports for node/browserify modules:
     var exports = {}
     exports.Point = Point;
+    exports.point_add = point_add;
     exports.point_scale = point_scale;
     exports.Hex = Hex;
     exports.hex_equal = hex_equal;

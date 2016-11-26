@@ -26,15 +26,31 @@ define(['hex'], function(H) {
     function Map(canvas, topLeft, size) {
 	// Canvas to draw on
 	this.canvas = canvas;
+	// top left qube
         this.topLeft = topLeft;
+	// size in qubes
         this.size = size;
 	this.origin = H.Point(0, 0);
 	this.scale = H.Point(25, 25);
+	// Hex qsr mouse is hovering over
 	this.mouseHex = H.Hex(0, 0, 0);
+	this.dragging = false;
+	this.dragStartX = null;
+	this.dragStartY = null;
 
 	map = this;
 	canvas.addEventListener("mousemove", function(e) {map.onMove(e);});
 	canvas.addEventListener("wheel", function(e) {map.onWheel(e);});
+	canvas.addEventListener("mousedown", function(e) {
+	    map.dragging = true;
+	    map.dragStartX = e.offsetX;
+	    map.dragStartY = e.offsetY;
+	});
+	canvas.addEventListener("mouseup", function(e) {
+	    map.dragging = false;
+	    map.dragStartX = null;
+	    map.dragStartY = null;
+	});
 	return this;
     }
     Map.prototype.layout = function() {
@@ -106,7 +122,20 @@ define(['hex'], function(H) {
     Map.prototype.redraw = function() {
         this.drawGrid("hsl(60, 10%, 90%)", true);
     }
+    Map.prototype.onDrag = function(event) {
+	dx = event.offsetX - this.dragStartX;
+	dy = event.offsetY - this.dragStartY;
+	this.origin = H.Point(dx, dy);
+    }
     Map.prototype.onMove = function(event) {
+	if (this.dragging) {
+	    this.onDrag(event);
+	}
+	this.showWhere(event);
+	this.redraw();
+        return true;
+    }
+    Map.prototype.showWhere = function(event) {
         var mapOffsetX = this.canvas.clientWidth / 2;
         var mapOffsetY = this.canvas.clientHeight / 2;
 
@@ -121,8 +150,6 @@ define(['hex'], function(H) {
         msg.textContent = Pos;
 
 	this.mouseHex = hex;
-	this.redraw();
-        return true;
     }
     Map.prototype.onWheel = function(event) {
 	delta = event.wheelDelta; // +-168
