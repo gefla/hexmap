@@ -1,15 +1,4 @@
 define(['hex'], function(H) {
-    function drawHex(ctx, layout, hex) {
-        var corners = H.polygon_corners(layout, hex);
-        ctx.beginPath();
-        ctx.strokeStyle = "black";
-        ctx.lineWidth = 1;
-        ctx.moveTo(corners[5].x, corners[5].y);
-        for (var i = 0; i < 6; i++) {
-            ctx.lineTo(corners[i].x, corners[i].y);
-        }
-        ctx.stroke();
-    }
     function colorForHex(hex) {
         // Match the color style used in the main article
         if (hex.q == 0 && hex.r == 0 && hex.s == 0) {
@@ -33,43 +22,63 @@ define(['hex'], function(H) {
             y: row
         };
     }
-    function drawHexLabel(ctx, map, layout, hex) {
-        var center = H.hex_to_pixel(layout, hex);
+
+    function Map(canvas, topLeft, size) {
+	// Canvas to draw on
+	this.canvas = canvas;
+        this.topLeft = topLeft;
+        this.size = size;
+	this.origin = H.Point(0, 0);
+	this.scale = H.Point(25, 25);
+	this.mouseHex = H.Hex(0, 0, 0);
+	return this;
+    }
+    Map.prototype.layout = function() {
+	return H.Layout(H.layout_pointy, this.scale, this.origin);
+    }
+    Map.prototype.hexes = function() {
+        var hexes = [];
+        var i1 = this.topLeft.x, i2 = i1 + this.size.x;
+        var j1 = this.topLeft.y, j2 = j1 + this.size.y;
+        for (var j = j1; j < j2; j++) {
+            var jOffset = -Math.floor(j / 2);
+            for (var i = i1 + jOffset; i < i2 + jOffset; i++) {
+                hexes.push(H.Hex(i, j, -i - j));
+            }
+        }
+        return hexes;
+    }
+    Map.prototype.toIndex = function(c) {
+        return ( Math.floor(c.x / 2) - this.topLeft.x + (c.y - this.topLeft.y) * this.size.x) ;
+    }
+    Map.prototype.drawHex = function(ctx, hex) {
+        var corners = H.polygon_corners(this.layout(), hex);
+        ctx.beginPath();
+        ctx.strokeStyle = "black";
+	if (H.hex_equal(hex, this.mouseHex)) {
+	    ctx.lineWidth = 2;
+	} else {
+            ctx.lineWidth = 1;
+	}
+        ctx.moveTo(corners[5].x, corners[5].y);
+        for (var i = 0; i < 6; i++) {
+            ctx.lineTo(corners[i].x, corners[i].y);
+        }
+        ctx.stroke();
+    }
+    Map.prototype.drawHexLabel = function(ctx, hex) {
+        var center = H.hex_to_pixel(this.layout(), hex);
         ctx.fillStyle = colorForHex(hex);
         ctx.font = "12px sans-serif";
         ctx.textAlign = "center";
         ctx.textBaseline = "middle";
         //ctx.fillText((hex.q == 0 && hex.r == 0 && hex.s == 0)? "q,r,s" : (hex.q + "," + hex.r + "," + hex.s), center.x, center.y - 6);
         var coords = cubeToOddQ(hex.q, hex.r, hex.s);
-        //ctx.fillText(map.toIndex(coords), center.x, center.y - 6);
+        //ctx.fillText(this.toIndex(coords), center.x, center.y - 6);
         ctx.fillText(coords.x + "," + coords.y, center.x, center.y + 6);
     }
-    var Map = function(topLeft, size) {
-        var map = {
-            topLeft: topLeft,
-            size: size,
-        };
-        map.hexes = function() {
-            var hexes = [];
-            var i1 = map.topLeft.x
-              , i2 = i1 + size.x;
-            var j1 = map.topLeft.y
-              , j2 = j1 + size.y;
-            for (var j = j1; j < j2; j++) {
-                var jOffset = -Math.floor(j / 2);
-                for (var i = i1 + jOffset; i < i2 + jOffset; i++) {
-                    hexes.push(H.Hex(i, j, -i - j));
-                }
-            }
-            return hexes;
-        }
-        map.toIndex = function(c) {
-            return ( Math.floor(c.x / 2) - map.topLeft.x + (c.y - map.topLeft.y) * map.size.x) ;
-        }
-        return map;
-    }
-    function drawGrid(id, backgroundColor, withLabels, layout, map) {
-        var canvas = document.getElementById(id);
+    Map.prototype.drawGrid = function(backgroundColor, withLabels) {
+	var canvas = this.canvas;
         var ctx = canvas.getContext('2d');
         var width = canvas.clientWidth;
         var height = canvas.clientHeight;
@@ -80,40 +89,36 @@ define(['hex'], function(H) {
             canvas.height = height * window.devicePixelRatio;
             ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
         }
-        if (map === undefined) {
-            map = Map({
-                x: -3,
-                y: -3
-            }, {
-                x: 6,
-                y: 6
-            });
-        }
         ctx.fillStyle = backgroundColor;
         ctx.fillRect(0, 0, width, height);
         ctx.translate(width / 2, height / 2);
-        map.hexes().forEach(function(hex) {
-            drawHex(ctx, layout, hex);
+	var map = this;
+        this.hexes().forEach(function(hex) {
+            map.drawHex(ctx, hex);
             if (withLabels)
-                drawHexLabel(ctx, map, layout, hex);
+                map.drawHexLabel(ctx, hex);
         });
     }
-    var layout = H.Layout(H.layout_pointy, H.Point(25, 25), H.Point(0, 0));
-    function drawExample() {
-        drawGrid("layout-test-orientation-pointy", "hsl(60, 10%, 90%)", true, layout);
+    Map.prototype.redraw = function() {
+        this.drawGrid("hsl(60, 10%, 90%)", true);
     }
-    function onMove(el, event) {
-        var hex = H.pixel_to_hex(layout, {
-            x: event.offsetX,
-            y: event.offsetY
-        });
-        var Pos = hex.q + "," + hex.r + " " + hex.s + " (" + event.offsetX + "/" + event.offsetY + ")";
+    Map.prototype.onMove = function(el, event) {
+        var mapOffsetX = this.canvas.clientWidth / 2;
+        var mapOffsetY = this.canvas.clientHeight / 2;
+
+        var hex = H.hex_round(H.pixel_to_hex(this.layout(), {
+            x: event.offsetX - mapOffsetX,
+            y: event.offsetY - mapOffsetY
+        }));
+	// Empire coords
+	var e = cubeToOddQ(hex.q, hex.r, hex.s);
+        var Pos = e.x + "," + e.y + " || " + hex.q + "," + hex.r + "," + hex.s + " (" + event.offsetX + "/" + event.offsetY + ")";
         var msg = document.getElementById("msg");
         msg.textContent = Pos;
+
+	this.mouseHex = hex;
+	this.redraw();
         return true;
     }
-    return {
-        onMove: onMove,
-        drawExample: drawExample
-    }
+    return Map;
 })

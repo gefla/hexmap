@@ -13,6 +13,9 @@ define(function() {
             s: s
         };
     }
+    function hex_equal(a, b) {
+        return (a.q == b.q && a.s == b.s && a.r == b.r);
+    }
     function hex_add(a, b) {
         return Hex(a.q + b.q, a.r + b.r, a.s + b.s);
     }
@@ -158,7 +161,7 @@ define(function() {
         console.log("FAIL", name);
     }
     function equal_hex(name, a, b) {
-        if (!(a.q == b.q && a.s == b.s && a.r == b.r)) {
+        if (!hex_equal(a, b)) {
             complain(name);
         }
     }
@@ -252,6 +255,7 @@ define(function() {
     var exports = {}
     exports.Point = Point;
     exports.Hex = Hex;
+    exports.hex_equal = hex_equal;
     exports.hex_add = hex_add;
     exports.hex_subtract = hex_subtract;
     exports.hex_scale = hex_scale;
