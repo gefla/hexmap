@@ -31,6 +31,10 @@ define(['hex'], function(H) {
 	this.origin = H.Point(0, 0);
 	this.scale = H.Point(25, 25);
 	this.mouseHex = H.Hex(0, 0, 0);
+
+	map = this;
+	canvas.addEventListener("mousemove", function(e) {map.onMove(e);});
+	canvas.addEventListener("wheel", function(e) {map.onWheel(e);});
 	return this;
     }
     Map.prototype.layout = function() {
@@ -102,7 +106,7 @@ define(['hex'], function(H) {
     Map.prototype.redraw = function() {
         this.drawGrid("hsl(60, 10%, 90%)", true);
     }
-    Map.prototype.onMove = function(el, event) {
+    Map.prototype.onMove = function(event) {
         var mapOffsetX = this.canvas.clientWidth / 2;
         var mapOffsetY = this.canvas.clientHeight / 2;
 
@@ -119,6 +123,16 @@ define(['hex'], function(H) {
 	this.mouseHex = hex;
 	this.redraw();
         return true;
+    }
+    Map.prototype.onWheel = function(event) {
+	delta = event.wheelDelta; // +-168
+	if (delta > 0) {
+	    this.scale = H.point_scale(this.scale, 1.1);
+	} else {
+	    this.scale = H.point_scale(this.scale, 0.9);
+	}
+	this.redraw();
+	return true;
     }
     return Map;
 })
